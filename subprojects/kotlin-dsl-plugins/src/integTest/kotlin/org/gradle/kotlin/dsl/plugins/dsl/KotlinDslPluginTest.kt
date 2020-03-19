@@ -207,7 +207,7 @@ class KotlinDslPluginTest : AbstractPluginTest() {
         """)
 
         assertThat(
-            outputOf("test", "-i"),
+            outputOf("test", "-i", "-Dkotlin.compiler.execution.strategy=\"out-of-process\""),
             containsString("Plugin Using Embedded Kotlin "))
     }
 
