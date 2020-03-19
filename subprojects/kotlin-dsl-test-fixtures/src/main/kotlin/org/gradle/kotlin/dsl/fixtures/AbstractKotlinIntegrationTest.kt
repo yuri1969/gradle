@@ -156,7 +156,7 @@ abstract class AbstractKotlinIntegrationTest : AbstractIntegrationTest() {
 
     protected
     fun compileKotlin(taskName: String = "classes"): ExecutionResult =
-        build(taskName).assertTaskExecuted(":compileKotlin")
+        build(taskName, "-Dkotlin.compiler.execution.strategy=\"out-of-process\"").assertTaskExecuted(":compileKotlin")
 
     protected
     fun withClassJar(fileName: String, vararg classes: Class<*>) =
