@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.Authenticator;
+import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -55,7 +56,49 @@ public class Download implements IDownload {
         configureProxyAuthentication();
     }
 
+    private void populateProxyPropertiesFromEnvironmentVariable(String protocol) {
+        // Do not fallback to environment variables if a proxy has been set via properties.
+        if (System.getProperty(protocol + ".proxyHost") != null) {
+            return;
+        }
+
+        String variableName = protocol + "_proxy";
+        String proxyString = System.getenv(variableName);
+        if (proxyString == null) {
+            proxyString = System.getenv(variableName.toUpperCase());
+        }
+
+        try {
+            URL proxyUrl = new URL(proxyString);
+            System.setProperty(protocol + ".proxyHost", proxyUrl.getHost());
+
+            int port = proxyUrl.getPort();
+            if (port > 0) {
+                System.setProperty(protocol + ".proxyPort", String.valueOf(port));
+            }
+
+            String userInfo = proxyUrl.getUserInfo();
+            if (userInfo != null) {
+                String[] userAndPassword = userInfo.split(":", 2);
+                System.setProperty(protocol + ".proxyUser", userAndPassword[0]);
+                if (userAndPassword.length > 1) {
+                    System.setProperty(protocol + ".proxyPassword", userAndPassword[1]);
+                }
+            }
+        } catch (MalformedURLException e) {
+            // Simply ignore a malformed proxy URL.
+            if (proxyString != null) {
+                logger.log("Unable to parse value '" + proxyString + "' of environment variable '" + variableName + "' as a URL.");
+                if (!proxyString.startsWith("http")) {
+                    logger.log("Please ensure it contains a valid protocol prefix.");
+                }
+            }
+        }
+    }
+
     private void configureProxyAuthentication() {
+        populateProxyPropertiesFromEnvironmentVariable("http");
+        populateProxyPropertiesFromEnvironmentVariable("https");
         Authenticator.setDefault(getProxyPasswordAuthenticator());
     }
 
