@@ -56,9 +56,29 @@ public class Download implements IDownload {
     }
 
     private void configureProxyAuthentication() {
-        if (System.getProperty("http.proxyUser") != null) {
-            Authenticator.setDefault(new ProxyAuthenticator());
-        }
+        Authenticator.setDefault(getProxyPasswordAuthenticator());
+    }
+
+    private Authenticator getProxyPasswordAuthenticator() {
+        return new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                // While Java itself only defines the use of the "http(s).proxyHost" and "http(s).proxyPort" properties, see [1] for Java 8, the Apache HttpClient established the use of the
+                // "http(s).proxyUser" and "http(s).proxyPassword" properties, see [2], so support them here.
+                // [1] https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html#Proxies
+                // [2] https://hc.apache.org/httpcomponents-client-5.0.x/httpclient5/xref/org/apache/hc/client5/http/impl/auth/SystemDefaultCredentialsProvider.html#L117
+
+                if ("http".equals(getRequestingScheme())) {
+                    String proxyUser = System.getProperty("http.proxyUser");
+                    if (proxyUser != null) {
+                        String proxyPassword = System.getProperty("http.proxyPassword", "");
+                        return new PasswordAuthentication(proxyUser, proxyPassword.toCharArray());
+                    }
+                }
+
+                return super.getPasswordAuthentication();
+            }
+        };
     }
 
     public void download(URI address, File destination) throws Exception {
@@ -74,7 +94,11 @@ public class Download implements IDownload {
         URL safeUrl = safeUri(address).toURL();
         try {
             out = new BufferedOutputStream(new FileOutputStream(destination));
+
+            // Note that no proxy is passed here as we configure any proxy globally using the HTTP(S) proxy system properties. The implementation will choose to look at the properties belonging to
+            // the protocol of the URL.
             conn = safeUrl.openConnection();
+
             addBasicAuthentication(address, conn);
             final String userAgentValue = calculateUserAgent();
             conn.setRequestProperty("User-Agent", userAgentValue);
@@ -185,15 +209,6 @@ public class Download implements IDownload {
         String osVersion = System.getProperty("os.version");
         String osArch = System.getProperty("os.arch");
         return String.format("%s/%s (%s;%s;%s) (%s;%s;%s)", appName, appVersion, osName, osVersion, osArch, javaVendor, javaVersion, javaVendorVersion);
-    }
-
-    private static class ProxyAuthenticator extends Authenticator {
-        @Override
-        protected PasswordAuthentication getPasswordAuthentication() {
-            return new PasswordAuthentication(
-                System.getProperty("http.proxyUser"), System.getProperty(
-                "http.proxyPassword", "").toCharArray());
-        }
     }
 
     private static class DefaultDownloadProgressListener implements DownloadProgressListener {
