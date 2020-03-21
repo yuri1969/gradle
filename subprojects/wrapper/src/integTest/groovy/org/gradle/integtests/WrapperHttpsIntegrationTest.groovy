@@ -19,14 +19,17 @@ package org.gradle.integtests
 import org.gradle.integtests.fixtures.TestResources
 import org.gradle.test.fixtures.keystore.TestKeyStore
 import org.gradle.test.fixtures.server.http.BlockingHttpsServer
+import org.gradle.test.fixtures.server.http.TestProxyServer
 import org.gradle.wrapper.Download
 import org.junit.Rule
+import spock.lang.Issue
 
 import static org.gradle.test.matchers.UserAgentMatcher.matchesNameAndVersion
 
 class WrapperHttpsIntegrationTest extends AbstractWrapperIntegrationSpec {
-    @Rule TestResources resources = new TestResources(temporaryFolder)
     @Rule BlockingHttpsServer server = new BlockingHttpsServer()
+    @Rule TestProxyServer proxyServer = new TestProxyServer()
+    @Rule TestResources resources = new TestResources(temporaryFolder)
 
     def setup() {
         TestKeyStore keyStore = TestKeyStore.init(resources.dir)
@@ -70,5 +73,52 @@ class WrapperHttpsIntegrationTest extends AbstractWrapperIntegrationSpec {
 
         then:
         outputDoesNotContain('WARNING Using HTTP Basic Authentication over an insecure connection to download the Gradle distribution. Please consider using HTTPS.')
+    }
+
+    def "downloads wrapper via proxy"() {
+        given:
+        proxyServer.start()
+        prepareWrapper(server.uri.toString())
+        file("gradle.properties") << """
+    systemProp.https.proxyHost=localhost
+    systemProp.https.proxyPort=${proxyServer.port}
+    systemProp.https.nonProxyHosts=${JavaVersion.current() >= JavaVersion.VERSION_1_7 ? '' : '~localhost'}
+"""
+        server.expect(server.get("/gradlew/dist").sendFile(distribution.binDistribution))
+
+        when:
+        def result = wrapperExecuter.withTasks('hello').run()
+
+        then:
+        assertThat(result.output, containsString('hello'))
+
+        and:
+        proxyServer.requestCount == 1
+    }
+
+    @Issue('https://github.com/gradle/gradle/issues/5052')
+    def "downloads wrapper via authenticated proxy"() {
+        given:
+        proxyServer.start('my_user', 'my_password')
+
+        and:
+        prepareWrapper(server.uri.toString())
+        server.expect(server.get("/gradlew/dist").sendFile(distribution.binDistribution))
+        file("gradle.properties") << """
+    systemProp.https.proxyHost=localhost
+    systemProp.https.proxyPort=${proxyServer.port}
+    systemProp.https.nonProxyHosts=${JavaVersion.current() >= JavaVersion.VERSION_1_7 ? '' : '~localhost'}
+    systemProp.https.proxyUser=my_user
+    systemProp.https.proxyPassword=my_password
+"""
+
+        when:
+        def result = wrapperExecuter.withTasks('hello').run()
+
+        then:
+        assertThat(result.output, containsString('hello'))
+
+        and:
+        proxyServer.requestCount == 1
     }
 }
