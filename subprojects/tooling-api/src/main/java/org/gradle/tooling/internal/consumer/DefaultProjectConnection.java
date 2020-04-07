@@ -44,12 +44,6 @@ class DefaultProjectConnection implements ProjectConnection {
 
     @Override
     public void close() {
-        connection.stop();
-        listener.connectionClosed(this);
-    }
-
-    void disconnect() {
-        // TODO no-op when close() was called
         connection.disconnect();
     }
 
