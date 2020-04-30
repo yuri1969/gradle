@@ -24,6 +24,7 @@ import org.gradle.integtests.fixtures.executer.IntegrationTestBuildContext
 import org.gradle.integtests.fixtures.versions.ReleasedVersionDistributions
 import org.gradle.internal.jvm.Jvm
 import org.gradle.internal.os.OperatingSystem
+import org.gradle.internal.service.scopes.VirtualFileSystemServices
 import org.gradle.internal.time.Clock
 import org.gradle.internal.time.Time
 import org.gradle.performance.results.CrossVersionPerformanceResults
@@ -242,7 +243,9 @@ class AbstractCrossVersionPerformanceTestRunner extends PerformanceTestSpec {
                 distribution(dist)
                 tasksToRun(this.tasksToRun as String[])
                 cleanTasks(this.cleanTasks as String[])
-                args((this.args + ['-I', RepoScriptBlockUtil.createMirrorInitScript().absolutePath, "-D${PLUGIN_PORTAL_OVERRIDE_URL_PROPERTY}=${gradlePluginRepositoryMirrorUrl()}"]) as String[])
+                args((this.args + ['-I', RepoScriptBlockUtil.createMirrorInitScript().absolutePath, "-D${PLUGIN_PORTAL_OVERRIDE_URL_PROPERTY}=${gradlePluginRepositoryMirrorUrl()}"] + (displayName == 'current'
+                    ? ["-D${VirtualFileSystemServices.VFS_RETENTION_ENABLED_PROPERTY}=true"]
+                    : [])) as String[])
                 gradleOpts(gradleOptsInUse as String[])
                 useDaemon(this.useDaemon)
             }
