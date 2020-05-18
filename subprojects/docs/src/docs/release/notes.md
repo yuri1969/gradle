@@ -8,6 +8,7 @@ We would like to thank the following community contributors to this release of G
 [Victor Turansky](https://github.com/turansky),
 [Gregor Dschung](https://github.com/chkpnt),
 [Roberto Perez Alcolea](https://github.com/rpalcolea),
+[kerr](https://github.com/hepin1989),
 and [Erhard Pointl](https://github.com/epeee).
 <!-- 
 Include only their name, impactful features should be called out separately below.
@@ -21,6 +22,8 @@ Switch your build to use Gradle @version@ by updating your wrapper:
 `./gradlew wrapper --gradle-version=@version@`
 
 See the [Gradle 6.x upgrade guide](userguide/upgrading_version_6.html#changes_@baseVersion@) to learn about deprecations, breaking changes and other considerations when upgrading to Gradle @version@. 
+
+NOTE: Gradle 6.4 has had _one_ patch release, which fixed several issues from the original release. We recommend always using the latest patch release.
 
 For Java, Groovy, Kotlin and Android compatibility, see the [full compatibility notes](userguide/compatibility.html).
 

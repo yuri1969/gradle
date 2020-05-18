@@ -218,7 +218,7 @@ class VirtualFileSystemRetentionIntegrationTest extends AbstractIntegrationSpec 
         executedAndNotSkipped ":compileJava", ":classes", ":run"
     }
 
-    @ToBeFixedForInstantExecution
+    @ToBeFixedForInstantExecution(because = "2 more files retained")
     def "detects input file change just before the task is executed"() {
         executer.requireDaemon()
         server.start()
@@ -265,7 +265,7 @@ class VirtualFileSystemRetentionIntegrationTest extends AbstractIntegrationSpec 
         retainedFilesInCurrentBuild == 10 // 8 build script class files + 2 task files
     }
 
-    @ToBeFixedForInstantExecution
+    @ToBeFixedForInstantExecution(because = "2 more files retained")
     def "detects input file change after the task has been executed"() {
         executer.requireDaemon()
         server.start()
@@ -498,7 +498,7 @@ class VirtualFileSystemRetentionIntegrationTest extends AbstractIntegrationSpec 
         file("build/output1").assertExists()
     }
 
-    @ToBeFixedForInstantExecution(because = "https://github.com/gradle/gradle/issues/11818")
+    @ToBeFixedForInstantExecution(because = "https://github.com/gradle/instant-execution/issues/168")
     def "detects changes to manifest"() {
         buildFile << """
             plugins {
@@ -606,7 +606,7 @@ class VirtualFileSystemRetentionIntegrationTest extends AbstractIntegrationSpec 
 
         when:
         inDirectory(settingsDir)
-        run("thing")
+        withRetention().run("thing")
         then:
         executed ":sub:thing"
 
@@ -683,6 +683,44 @@ class VirtualFileSystemRetentionIntegrationTest extends AbstractIntegrationSpec 
         "symlinked file"                | "symlinkedFile"                | "actualFile"     | 'file("symlinkedFile")' | "actualFile"
         "symlinked directory"           | "symlinkedDir"                 | "actualDir"      | 'dir("symlinkedDir")'   | "actualDir/file.txt"
         "symlink in a directory"        | "dirWithSymlink/symlinkInside" | "fileInside.txt" | 'dir("dirWithSymlink")' | "fileInside.txt"
+    }
+
+    @Unroll
+    def "detects when a task removes the build directory #buildDir"() {
+        buildFile << """
+            apply plugin: 'base'
+
+            project.buildDir = file("${buildDir}")
+
+            task myClean {
+                doLast {
+                    delete buildDir
+                }
+            }
+
+            task producer {
+                def outputFile = new File(buildDir, "some/file/in/buildDir/output.txt")
+                outputs.file(outputFile)
+                doLast {
+                    outputFile.parentFile.mkdirs()
+                    outputFile.text = "Output"
+                }
+            }
+        """
+
+        when:
+        withRetention().run "producer"
+        then:
+        executedAndNotSkipped ":producer"
+
+        when:
+        withRetention().run "myClean"
+        withRetention().run "producer"
+        then:
+        executedAndNotSkipped ":producer"
+
+        where:
+        buildDir << ["build", "build/myProject"]
     }
 
     // This makes sure the next Gradle run starts with a clean BuildOutputCleanupRegistry
