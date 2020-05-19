@@ -16,6 +16,7 @@
 
 package org.gradle.integtests
 
+import org.gradle.api.JavaVersion
 import org.gradle.integtests.fixtures.TestResources
 import org.gradle.test.fixtures.keystore.TestKeyStore
 import org.gradle.test.fixtures.server.http.BlockingHttpsServer
@@ -25,6 +26,8 @@ import org.junit.Rule
 import spock.lang.Issue
 
 import static org.gradle.test.matchers.UserAgentMatcher.matchesNameAndVersion
+import static org.hamcrest.CoreMatchers.containsString
+import static org.hamcrest.MatcherAssert.assertThat
 
 class WrapperHttpsIntegrationTest extends AbstractWrapperIntegrationSpec {
     @Rule BlockingHttpsServer server = new BlockingHttpsServer()
@@ -38,8 +41,6 @@ class WrapperHttpsIntegrationTest extends AbstractWrapperIntegrationSpec {
         wrapperExecuter.withArgument("-Djavax.net.ssl.trustStore=$keyStore.keyStore.path")
         wrapperExecuter.withArgument("-Djavax.net.ssl.trustStorePassword=$keyStore.keyStorePassword")
         server.configure(keyStore)
-        server.withBasicAuthentication("jdoe", "changeit")
-        server.start()
 
         file("build.gradle") << """
     task hello {
@@ -62,6 +63,8 @@ class WrapperHttpsIntegrationTest extends AbstractWrapperIntegrationSpec {
 
     def "does not warn about using basic authentication over secure connection"() {
         given:
+        server.withBasicAuthentication("jdoe", "changeit")
+        server.start()
         prepareWrapper("https://jdoe:changeit@localhost:${server.port}")
         server.expect(server.get("/gradlew/dist")
                 .expectUserAgent(matchesNameAndVersion("gradlew", Download.UNKNOWN_VERSION))
@@ -72,11 +75,13 @@ class WrapperHttpsIntegrationTest extends AbstractWrapperIntegrationSpec {
         result = wrapperExecuter.withTasks('hello').run()
 
         then:
-        outputDoesNotContain('WARNING Using HTTP Basic Authentication over an insecure connection to download the Gradle distribution. Please consider using HTTPS.')
+        outputDoesNotContain('Please consider using HTTPS.')
     }
 
     def "downloads wrapper via proxy"() {
         given:
+        server.start()
+        proxyServer.configureProxy(executer, 'https')
         proxyServer.start()
         prepareWrapper(server.uri.toString())
         file("gradle.properties") << """
@@ -99,7 +104,9 @@ class WrapperHttpsIntegrationTest extends AbstractWrapperIntegrationSpec {
     @Issue('https://github.com/gradle/gradle/issues/5052')
     def "downloads wrapper via authenticated proxy"() {
         given:
-        proxyServer.start('my_user', 'my_password')
+        server.start()
+        proxyServer.configureProxy(executer, 'https', 'my_user', 'my_password')
+        proxyServer.start()
 
         and:
         prepareWrapper(server.uri.toString())

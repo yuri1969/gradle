@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.Authenticator;
-import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -53,74 +52,15 @@ public class Download implements IDownload {
         this.appName = appName;
         this.appVersion = appVersion;
         this.progressListener = new DefaultDownloadProgressListener(logger, progressListener);
+
         configureProxyAuthentication();
     }
 
-    private void populateProxyPropertiesFromEnvironmentVariable(String protocol) {
-        // Do not fallback to environment variables if a proxy has been set via properties.
-        if (System.getProperty(protocol + ".proxyHost") != null) {
-            return;
-        }
-
-        String variableName = protocol + "_proxy";
-        String proxyString = System.getenv(variableName);
-        if (proxyString == null) {
-            proxyString = System.getenv(variableName.toUpperCase());
-        }
-
-        try {
-            URL proxyUrl = new URL(proxyString);
-            System.setProperty(protocol + ".proxyHost", proxyUrl.getHost());
-
-            int port = proxyUrl.getPort();
-            if (port > 0) {
-                System.setProperty(protocol + ".proxyPort", String.valueOf(port));
-            }
-
-            String userInfo = proxyUrl.getUserInfo();
-            if (userInfo != null) {
-                String[] userAndPassword = userInfo.split(":", 2);
-                System.setProperty(protocol + ".proxyUser", userAndPassword[0]);
-                if (userAndPassword.length > 1) {
-                    System.setProperty(protocol + ".proxyPassword", userAndPassword[1]);
-                }
-            }
-        } catch (MalformedURLException e) {
-            // Simply ignore a malformed proxy URL.
-            if (proxyString != null) {
-                logger.log("Unable to parse value '" + proxyString + "' of environment variable '" + variableName + "' as a URL.");
-                if (!proxyString.startsWith("http")) {
-                    logger.log("Please ensure it contains a valid protocol prefix.");
-                }
-            }
-        }
-    }
-
     private void configureProxyAuthentication() {
-        populateProxyPropertiesFromEnvironmentVariable("http");
-        populateProxyPropertiesFromEnvironmentVariable("https");
-        Authenticator.setDefault(getProxyPasswordAuthenticator());
-    }
-
-    private Authenticator getProxyPasswordAuthenticator() {
-        return new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() {
-                // While Java itself only defines the use of the "http(s).proxyHost" and "http(s).proxyPort" properties, see [1] for Java 8, the Apache HttpClient established the use of the
-                // "http(s).proxyUser" and "http(s).proxyPassword" properties, see [2], so support them here.
-                // [1] https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html#Proxies
-                // [2] https://hc.apache.org/httpcomponents-client-5.0.x/httpclient5/xref/org/apache/hc/client5/http/impl/auth/SystemDefaultCredentialsProvider.html#L117
-
-                String protocol = getRequestingScheme();
-                String proxyUser = System.getProperty(protocol + ".proxyUser");
-                if (proxyUser != null) {
-                    String proxyPassword = System.getProperty(protocol + ".proxyPassword", "");
-                    return new PasswordAuthentication(proxyUser, proxyPassword.toCharArray());
-                }
-
-                return super.getPasswordAuthentication();
-            }
-        };
+        ProxyCredentials proxyCredentials = ProxyCredentials.load();
+        if (proxyCredentials.isProxy()) {
+            Authenticator.setDefault(new ProxyAuthenticator(proxyCredentials));
+        }
     }
 
     public void download(URI address, File destination) throws Exception {
@@ -251,6 +191,57 @@ public class Download implements IDownload {
         String osVersion = System.getProperty("os.version");
         String osArch = System.getProperty("os.arch");
         return String.format("%s/%s (%s;%s;%s) (%s;%s;%s)", appName, appVersion, osName, osVersion, osArch, javaVendor, javaVersion, javaVendorVersion);
+    }
+
+    private static class ProxyAuthenticator extends Authenticator {
+
+        private final ProxyCredentials proxyCredentials;
+
+        public ProxyAuthenticator(ProxyCredentials proxyCredentials) {
+            this.proxyCredentials = proxyCredentials;
+        }
+
+        @Override
+        protected PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication(
+                proxyCredentials.getUser(), proxyCredentials.getPassword());
+        }
+    }
+
+    private static class ProxyCredentials {
+        private final boolean proxy;
+        private final String protocol;
+
+        private ProxyCredentials(boolean proxy, String protocol) {
+            this.proxy = proxy;
+            this.protocol = protocol;
+        }
+
+        public ProxyCredentials(boolean hasProxy) {
+            this(hasProxy, null);
+        }
+
+        public boolean isProxy() {
+            return proxy;
+        }
+
+        public static ProxyCredentials load() {
+            String httpUser = System.getProperty("http.proxyUser");
+            String httpsUser = System.getProperty("https.proxyUser");
+            if (httpUser == null && httpsUser == null) {
+                return new ProxyCredentials(false);
+            } else {
+                return new ProxyCredentials(true, httpsUser == null ? "http" : "https");
+            }
+        }
+
+        public String getUser() {
+            return System.getProperty(protocol + ".proxyUser");
+        }
+
+        public char[] getPassword() {
+            return System.getProperty(protocol + ".proxyPassword").toCharArray();
+        }
     }
 
     private static class DefaultDownloadProgressListener implements DownloadProgressListener {
