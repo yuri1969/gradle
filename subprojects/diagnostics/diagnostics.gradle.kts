@@ -56,6 +56,7 @@ dependencies {
     testFixturesImplementation(project(":internalIntegTesting"))
     testFixturesImplementation(library("guava"))
 
+    integTestRuntimeOnly(project(":buildInit"))
     // These are only here for 'DiagnosticsComponentReportIntegrationTest.shows details of multiple components'
     integTestRuntimeOnly(project(":plugins"))
     integTestRuntimeOnly(project(":platformNative"))
