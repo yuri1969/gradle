@@ -166,9 +166,14 @@ public class VirtualFileSystemServices extends AbstractPluginServiceRegistry {
             FileSystem fileSystem,
             Stat stat,
             StringInterner stringInterner,
-            ListenerManager listenerManager
+            ListenerManager listenerManager,
+            CacheScopeMapping cacheScopeMapping
         ) {
-            Predicate<String> watchFilter = path -> !additiveCacheLocations.isInsideAdditiveCache(path);
+            File globalCacheDirectory = cacheScopeMapping.getRootDirectory(null);
+            String globalCacheDirectoryPrefix = globalCacheDirectory.getAbsolutePath() + File.separator;
+            Predicate<String> watchFilter = path ->
+                !path.startsWith(globalCacheDirectoryPrefix) &&
+                    !additiveCacheLocations.isInsideAdditiveCache(path);
             DelegatingDiffCapturingUpdateFunctionDecorator updateFunctionDecorator = new DelegatingDiffCapturingUpdateFunctionDecorator(watchFilter);
             DefaultVirtualFileSystem delegate = new DefaultVirtualFileSystem(
                 hasher,
