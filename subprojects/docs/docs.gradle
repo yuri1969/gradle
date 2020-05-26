@@ -73,10 +73,7 @@ dependencies {
     testImplementation('org.seleniumhq.selenium:selenium-htmlunit-driver:2.42.2')
     testImplementation libraries.commons_httpclient.coordinates
     testImplementation "org.apache.httpcomponents:httpmime:${libraries.commons_httpclient.version}"
-}
-
-configurations.testImplementation {
-    extendsFrom(configurations.fullGradleRuntime)
+    testImplementation project(":distributionsFull")
 }
 
 asciidoctorj {
