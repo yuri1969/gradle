@@ -33,8 +33,7 @@ import org.gradle.api.internal.attributes.ImmutableAttributesFactory;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.internal.Factory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.stream.Collectors;
 
 public class PluginDependencyResolutionServices implements DependencyResolutionServices {
 
@@ -98,17 +97,20 @@ public class PluginDependencyResolutionServices implements DependencyResolutionS
     }
 
     public PluginRepositoriesProvider getPluginRepositoriesProvider() {
-        return new PluginRepositoriesProvider() {
-            @Override
-            public List<ArtifactRepository> getPluginRepositories() {
-                RepositoryHandler repositories = getResolveRepositoryHandler();
-                List<ArtifactRepository> list = new ArrayList<ArtifactRepository>(repositories.size());
-                for (ArtifactRepository repository : repositories) {
-                    list.add(new PluginArtifactRepository(repository));
-                }
-                return list;
-            }
-        };
+//        return new PluginRepositoriesProvider() {
+//            @Override
+//            public List<ArtifactRepository> getPluginRepositories() {
+////                RepositoryHandler repositories = getResolveRepositoryHandler();
+////                List<ArtifactRepository> list = new ArrayList<ArtifactRepository>(repositories.size());
+////                for (ArtifactRepository repository : repositories) {
+////                    list.add(new PluginArtifactRepository(repository));
+////                }
+////                return list;
+////
+//                getResolveRepositoryHandler().stream().map(PluginArtifactRepository::new).collect(Collectors.toList());
+//            }
+//        };
+        return () -> getResolveRepositoryHandler().stream().map(PluginArtifactRepository::new).collect(Collectors.toList());
     }
 
     private static class PluginArtifactRepository implements ArtifactRepositoryInternal, ResolutionAwareRepository {

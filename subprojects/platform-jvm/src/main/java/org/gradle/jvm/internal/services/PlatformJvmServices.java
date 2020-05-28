@@ -36,6 +36,8 @@ import org.gradle.jvm.internal.resolve.JvmVariantSelector;
 import org.gradle.jvm.internal.resolve.VariantAxisCompatibilityFactory;
 import org.gradle.jvm.internal.resolve.VariantsMetaData;
 import org.gradle.jvm.platform.JavaPlatform;
+import org.gradle.jvm.toolchain.JavaToolchains;
+import org.gradle.jvm.toolchain.internal.DefaultJavaInstallationContainer;
 import org.gradle.jvm.toolchain.internal.DefaultJavaInstallationRegistry;
 import org.gradle.jvm.toolchain.internal.JavaInstallationProbe;
 import org.gradle.model.internal.manage.schema.ModelSchemaStore;
@@ -58,6 +60,8 @@ public class PlatformJvmServices extends AbstractPluginServiceRegistry {
     @Override
     public void registerBuildServices(ServiceRegistration registration) {
         registration.add(DefaultJavaInstallationRegistry.class);
+        registration.add(DefaultJavaInstallationContainer.class);
+        registration.add(JavaToolchains.class);
         registration.addProvider(new BuildScopeServices());
     }
 

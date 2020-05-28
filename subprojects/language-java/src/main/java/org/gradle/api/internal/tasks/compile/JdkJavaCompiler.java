@@ -62,6 +62,7 @@ public class JdkJavaCompiler implements Compiler<JavaCompileSpec>, Serializable 
     private JavaCompiler.CompilationTask createCompileTask(JavaCompileSpec spec, JdkJavaCompilerResult result) {
         List<String> options = new JavaCompilerArgumentsBuilder(spec).build();
         JavaCompiler compiler = javaHomeBasedJavaCompilerFactory.create();
+        System.out.println(compiler.getSourceVersions());
         MinimalJavaCompileOptions compileOptions = spec.getCompileOptions();
         Charset charset = compileOptions.getEncoding() != null ? Charset.forName(compileOptions.getEncoding()) : null;
         StandardJavaFileManager standardFileManager = compiler.getStandardFileManager(null, null, charset);

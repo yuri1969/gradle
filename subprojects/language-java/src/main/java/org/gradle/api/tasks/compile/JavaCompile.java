@@ -45,6 +45,7 @@ import org.gradle.api.internal.tasks.compile.incremental.recomp.SourceFileClassN
 import org.gradle.api.jvm.ModularitySpec;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.model.ReplacedBy;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.InputFiles;
@@ -64,9 +65,10 @@ import org.gradle.internal.operations.BuildOperationExecutor;
 import org.gradle.jvm.internal.toolchain.JavaToolChainInternal;
 import org.gradle.jvm.platform.JavaPlatform;
 import org.gradle.jvm.platform.internal.DefaultJavaPlatform;
+import org.gradle.jvm.toolchain.JavaCompiler;
+import org.gradle.jvm.toolchain.JavaInstallation;
 import org.gradle.jvm.toolchain.JavaToolChain;
 import org.gradle.language.base.internal.compile.Compiler;
-import org.gradle.language.base.internal.compile.CompilerUtil;
 import org.gradle.work.Incremental;
 import org.gradle.work.InputChanges;
 
@@ -99,6 +101,7 @@ public class JavaCompile extends AbstractCompile {
     private final FileCollection stableSources = getProject().files((Callable<Object[]>) () -> new Object[]{getSource(), getSources()});
     private final ModularitySpec modularity;
     private File sourceClassesMappingFile;
+    private Property<JavaCompiler> toolchainCompiler;
 
     public JavaCompile() {
         Project project = getProject();
@@ -106,6 +109,7 @@ public class JavaCompile extends AbstractCompile {
         compileOptions = objects.newInstance(CompileOptions.class);
         CompilerForkUtils.doNotCacheIfForkingViaExecutable(compileOptions, getOutputs());
         modularity = objects.newInstance(DefaultModularitySpec.class);
+        toolchainCompiler = objects.property(JavaCompiler.class);
     }
 
     /**
@@ -177,11 +181,11 @@ public class JavaCompile extends AbstractCompile {
     @TaskAction
     protected void compile(InputChanges inputs) {
         DefaultJavaCompileSpec spec = createSpec();
-        if (!compileOptions.isIncremental()) {
-            performFullCompilation(spec);
-        } else {
-            performIncrementalCompilation(inputs, spec);
-        }
+//        if (!compileOptions.isIncremental()) {
+        performFullCompilation(spec);
+//        } else {
+//            performIncrementalCompilation(inputs, spec);
+//        }
     }
 
     private void performIncrementalCompilation(InputChanges inputs, DefaultJavaCompileSpec spec) {
@@ -235,6 +239,7 @@ public class JavaCompile extends AbstractCompile {
         Compiler<JavaCompileSpec> compiler;
         spec.setSourceFiles(getStableSources());
         compiler = createCompiler(spec);
+        System.out.println("Using compiler: " + compiler);
         performCompilation(spec, compiler);
     }
 
@@ -264,7 +269,15 @@ public class JavaCompile extends AbstractCompile {
     }
 
     private CleaningJavaCompiler<JavaCompileSpec> createCompiler(JavaCompileSpec spec) {
-        Compiler<JavaCompileSpec> javaCompiler = CompilerUtil.castCompiler(((JavaToolChainInternal) getToolChain()).select(getPlatform()).newCompiler(spec.getClass()));
+//        Compiler<JavaCompileSpec> javaCompiler = CompilerUtil.castCompiler(((JavaToolChainInternal) getToolChain()).select(getPlatform()).newCompiler(spec.getClass()));
+        final JavaCompiler javaCompiler = toolchainCompiler.get();
+        // TODO: should be done as part of resolving the tool
+        final JavaInstallation installation = javaCompiler.getInstallation();
+
+        final ForkOptions forkOptions = spec.getCompileOptions().getForkOptions();
+        forkOptions.setJavaHome(installation.getInstallationDirectory().getAsFile());
+        forkOptions.setExecutable(installation.getJavaExecutable().toString());
+        System.out.println(installation.getInstallationDirectory().getAsFile());
         return new CleaningJavaCompiler<>(javaCompiler, getOutputs(), getDeleter());
     }
 
@@ -360,5 +373,10 @@ public class JavaCompile extends AbstractCompile {
     @InputFiles
     protected FileCollection getStableSources() {
         return stableSources;
+    }
+
+    @Nested
+    public Property<JavaCompiler> getCompiler() {
+        return toolchainCompiler;
     }
 }

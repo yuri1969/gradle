@@ -1,5 +1,5 @@
-import org.gradle.gradlebuild.testing.integrationtests.cleanup.WhenNotEmpty
 import org.gradle.gradlebuild.test.integrationtests.integrationTestUsesSampleDir
+import org.gradle.gradlebuild.testing.integrationtests.cleanup.WhenNotEmpty
 
 plugins {
     gradlebuild.distribution.`plugins-api-java`
@@ -65,7 +65,7 @@ dependencies {
 }
 
 strictCompile {
-    ignoreDeprecations() // this project currently uses many deprecated part from 'platform-jvm'
+    ignoreParameterizedVarargType() // this project currently uses many deprecated part from 'platform-jvm'
 }
 
 classycle {

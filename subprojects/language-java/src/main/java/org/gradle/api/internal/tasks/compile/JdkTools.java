@@ -65,7 +65,7 @@ public class JdkTools {
 
     private Class<JavaCompiler.CompilationTask> incrementalCompileTaskClass;
 
-    JdkTools(JavaInfo javaInfo, List<File> compilerPlugins) {
+    public JdkTools(JavaInfo javaInfo, List<File> compilerPlugins) {
         DefaultClassLoaderFactory defaultClassLoaderFactory = new DefaultClassLoaderFactory();
         JavaVersion javaVersion = Jvm.current().getJavaVersion();
         boolean java9Compatible = javaVersion.isJava9Compatible();

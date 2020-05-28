@@ -55,6 +55,7 @@ import org.gradle.internal.component.external.model.JavaEcosystemVariantDerivati
 import org.gradle.internal.deprecation.DeprecatableConfiguration;
 import org.gradle.jvm.toolchain.JavaInstallationContainer;
 import org.gradle.jvm.toolchain.JavaInstallationRegistry;
+import org.gradle.jvm.toolchain.JavaToolchains;
 import org.gradle.jvm.toolchain.internal.DefaultJavaInstallationContainer;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
 import org.gradle.language.jvm.tasks.ProcessResources;
@@ -102,13 +103,16 @@ public class JavaBasePlugin implements Plugin<ProjectInternal> {
     private final JavaInstallationRegistry javaInstallationRegistry;
     private final boolean javaClasspathPackaging;
     private final JavaInstallationContainer javaInstallationContainer;
+    private final JavaToolchains javaToolchains;
 
     @Inject
-    public JavaBasePlugin(ObjectFactory objectFactory, JavaInstallationRegistry javaInstallationRegistry) {
+    public JavaBasePlugin(ObjectFactory objectFactory, JavaInstallationRegistry javaInstallationRegistry, JavaToolchains toolchains, DefaultJavaInstallationContainer installContainer) {
         this.objectFactory = objectFactory;
         this.javaInstallationRegistry = javaInstallationRegistry;
-        this.javaInstallationContainer = objectFactory.newInstance(DefaultJavaInstallationContainer.class);
+//        this.javaInstallationContainer = objectFactory.newInstance(DefaultJavaInstallationContainer.class);
+        this.javaInstallationContainer = installContainer;
         this.javaClasspathPackaging = Boolean.getBoolean(COMPILE_CLASSPATH_PACKAGING_SYSTEM_PROPERTY);
+        this.javaToolchains = toolchains;
     }
 
     @Override
@@ -143,6 +147,7 @@ public class JavaBasePlugin implements Plugin<ProjectInternal> {
         // TODO: BM these should be merged together, breaking the `javaInstalls` accessor
         project.getExtensions().add(JavaInstallationRegistry.class, "javaInstalls", javaInstallationRegistry);
         project.getExtensions().add(JavaInstallationContainer.class, "javaInstallations", javaInstallationContainer);
+        project.getExtensions().add(JavaToolchains.class, "javaToolchains", javaToolchains);
         return javaConvention;
     }
 

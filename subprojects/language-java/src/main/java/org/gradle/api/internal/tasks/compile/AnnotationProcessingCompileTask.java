@@ -24,7 +24,6 @@ import org.gradle.api.internal.tasks.compile.processing.AnnotationProcessorDecla
 import org.gradle.api.internal.tasks.compile.processing.DynamicProcessor;
 import org.gradle.api.internal.tasks.compile.processing.IsolatingProcessor;
 import org.gradle.api.internal.tasks.compile.processing.NonIncrementalProcessor;
-import org.gradle.api.internal.tasks.compile.processing.SupportedOptionsCollectingProcessor;
 import org.gradle.api.internal.tasks.compile.processing.TimeTrackingProcessor;
 import org.gradle.internal.classpath.DefaultClassPath;
 import org.gradle.internal.concurrent.CompositeStoppable;
@@ -33,12 +32,11 @@ import javax.annotation.processing.Processor;
 import javax.tools.JavaCompiler;
 import java.io.File;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import static org.gradle.api.internal.tasks.compile.filter.AnnotationProcessorFilter.*;
+import static org.gradle.api.internal.tasks.compile.filter.AnnotationProcessorFilter.getFilteredClassLoader;
 
 /**
  * Wraps another {@link JavaCompiler.CompilationTask} and sets up its annotation processors
@@ -98,23 +96,23 @@ class AnnotationProcessingCompileTask implements JavaCompiler.CompilationTask {
 
     private void setupProcessors() {
         processorClassloader = createProcessorClassLoader();
-        List<Processor> processors = new ArrayList<Processor>(processorDeclarations.size());
-        if (!processorDeclarations.isEmpty()) {
-            SupportedOptionsCollectingProcessor supportedOptionsCollectingProcessor = new SupportedOptionsCollectingProcessor();
-            for (AnnotationProcessorDeclaration declaredProcessor : processorDeclarations) {
-                AnnotationProcessorResult processorResult = new AnnotationProcessorResult(result, declaredProcessor.getClassName());
-                result.getAnnotationProcessorResults().add(processorResult);
-
-                Class<?> processorClass = loadProcessor(declaredProcessor);
-                Processor processor = instantiateProcessor(processorClass);
-                supportedOptionsCollectingProcessor.addProcessor(processor);
-                processor = decorateForIncrementalProcessing(processor, declaredProcessor.getType(), processorResult);
-                processor = decorateForTimeTracking(processor, processorResult);
-                processors.add(processor);
-            }
-            processors.add(supportedOptionsCollectingProcessor);
-        }
-        delegate.setProcessors(processors);
+//        List<Processor> processors = new ArrayList<Processor>(processorDeclarations.size());
+//        if (!processorDeclarations.isEmpty()) {
+//            SupportedOptionsCollectingProcessor supportedOptionsCollectingProcessor = new SupportedOptionsCollectingProcessor();
+//            for (AnnotationProcessorDeclaration declaredProcessor : processorDeclarations) {
+//                AnnotationProcessorResult processorResult = new AnnotationProcessorResult(result, declaredProcessor.getClassName());
+//                result.getAnnotationProcessorResults().add(processorResult);
+//
+//                Class<?> processorClass = loadProcessor(declaredProcessor);
+//                Processor processor = instantiateProcessor(processorClass);
+//                supportedOptionsCollectingProcessor.addProcessor(processor);
+//                processor = decorateForIncrementalProcessing(processor, declaredProcessor.getType(), processorResult);
+//                processor = decorateForTimeTracking(processor, processorResult);
+//                processors.add(processor);
+//            }
+//            processors.add(supportedOptionsCollectingProcessor);
+//        }
+//        delegate.setProcessors(processors);
     }
 
     private URLClassLoader createProcessorClassLoader() {

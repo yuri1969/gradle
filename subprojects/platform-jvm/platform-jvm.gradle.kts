@@ -41,7 +41,7 @@ dependencies {
 }
 
 strictCompile {
-    ignoreDeprecations() // most of this project has been deprecated
+    ignoreParameterizedVarargType() // most of this project has been deprecated
 }
 
 integrationTestUsesSampleDir("subprojects/platform-jvm/src/main")

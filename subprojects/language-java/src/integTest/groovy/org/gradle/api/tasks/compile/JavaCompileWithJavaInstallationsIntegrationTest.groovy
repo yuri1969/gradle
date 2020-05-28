@@ -67,6 +67,47 @@ class JavaCompileWithJavaInstallationsIntegrationTest extends AbstractIntegratio
         outputContains(jdk14.javaHome.absolutePath)
     }
 
+    def "query toolchain"() {
+        def jdk14 = AvailableJavaHomes.getAvailableJdks(JavaVersion.VERSION_14).first()
+
+        file("src/main/java/Foo.java") << "public class Foo {" +
+            "static void howMany(int k) {\n" +
+            "    System.out.println(\n" +
+            "        switch (k) {\n" +
+            "            case  1 -> \"one\";\n" +
+            "            case  2 -> \"two\";\n" +
+            "            default -> \"many\";\n" +
+            "        }\n" +
+            "    );\n" +
+            "}" +
+            "}"
+
+        settingsFile << "rootProject.name = 'createJavaInstallation'"
+        buildFile << """
+            plugins {
+                id "java"
+            }
+            javaInstallations {
+                create("jdk14") {
+                  path = "${jdk14.javaHome.absolutePath}"
+                }
+            }
+            java {
+                sourceCompatibility = JavaVersion.VERSION_14
+                targetCompatibility = JavaVersion.VERSION_14
+            }
+            tasks.named("compileJava") {
+                compiler = providers.provider { javaToolchains.query(new ToolchainRequirements()).get().getJavaCompiler() }
+            }
+        """
+
+        when:
+        succeeds("compileJava")
+
+        then:
+        outputContains("")
+    }
+
     @Requires(TestPrecondition.JDK14_OR_EARLIER)
     def "verify matching installation for source compatibility"() {
         settingsFile << "rootProject.name = 'createJavaInstallation'"
