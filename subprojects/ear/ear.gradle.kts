@@ -39,7 +39,10 @@ dependencies {
     testImplementation(library("ant"))
     testImplementation(testFixtures(project(":core")))
 
-    testRuntimeOnly(project(":runtimeApiInfo"))
+    testRuntimeOnly(project(":distributionsJvm")) {
+        because("ProjectBuilder tests load services from a Gradle distribution.")
+    }
+    integTestDistributionRuntimeOnly(project(":distributionsJvm"))
 }
 
 strictCompile {

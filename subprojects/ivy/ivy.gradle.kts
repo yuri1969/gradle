@@ -49,7 +49,6 @@ dependencies {
     testImplementation(testFixtures(project(":modelCore")))
     testImplementation(testFixtures(project(":platformBase")))
     testImplementation(testFixtures(project(":dependencyManagement")))
-    testRuntimeOnly(project(":runtimeApiInfo"))
 
     integTestImplementation(project(":ear"))
     integTestImplementation(library("slf4j_api"))
@@ -67,12 +66,15 @@ dependencies {
     }
     testFixturesImplementation(project(":logging"))
     testFixturesImplementation(project(":dependencyManagement"))
-    testFixturesImplementation(project(":internalTesting"))
     testFixturesImplementation(project(":internalIntegTesting"))
     testFixturesImplementation(library("slf4j_api"))
     testLibraries("sshd").forEach { testFixturesImplementation(it) }
 
-    integTestRuntimeOnly(project(":kotlinDslProviderPlugins"))
+    testRuntimeOnly(project(":distributionsCore")) {
+        because("ProjectBuilder tests load services from a Gradle distribution.")
+    }
+    integTestDistributionRuntimeOnly(project(":distributionsCore"))
+    crossVersionTestDistributionRuntimeOnly(project(":distributionsCore"))
 }
 
 testFilesCleanup {

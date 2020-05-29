@@ -39,7 +39,6 @@ dependencies {
 
     testFixturesApi(testFixtures(project(":diagnostics")))
     testFixturesApi(testFixtures(project(":core")))
-    testFixturesImplementation(project(":internalTesting"))
     testFixturesImplementation(project(":internalIntegTesting"))
     testFixturesImplementation(library("guava"))
 
@@ -49,12 +48,9 @@ dependencies {
     testImplementation(project(":resources"))
     testImplementation(testFixtures(project(":coreApi")))
 
-    testRuntimeOnly(project(":runtimeApiInfo"))
-
     integTestImplementation(project(":platformBase"))
 
-    integTestRuntimeOnly(project(":apiMetadata"))
-    integTestRuntimeOnly(project(":kotlinDslProviderPlugins"))
+    integTestDistributionRuntimeOnly(project(":distributionsCore"))
 }
 
 strictCompile {

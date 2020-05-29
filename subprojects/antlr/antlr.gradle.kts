@@ -41,7 +41,11 @@ dependencies {
     testImplementation(project(":baseServicesGroovy"))
     testImplementation(project(":fileCollections"))
     testImplementation(testFixtures(project(":core")))
-    testRuntimeOnly(project(":runtimeApiInfo"))
+
+    testRuntimeOnly(project(":distributionsCore")) {
+        because("ProjectBuilder tests load services from a Gradle distribution.")
+    }
+    integTestDistributionRuntimeOnly(project(":distributionsFull"))
 }
 
 classycle {

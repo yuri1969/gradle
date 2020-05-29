@@ -48,7 +48,8 @@ dependencies {
     testImplementation(testFixtures(project(":languageNative")))
     testImplementation(testFixtures(project(":ide")))
 
-    testRuntimeOnly(project(":runtimeApiInfo"))
-
-    integTestRuntimeOnly(project(":ideNative"))
+    testRuntimeOnly(project(":distributionsCore")) {
+        because("ProjectBuilder tests load services from a Gradle distribution.")
+    }
+    integTestDistributionRuntimeOnly(project(":distributionsNative"))
 }

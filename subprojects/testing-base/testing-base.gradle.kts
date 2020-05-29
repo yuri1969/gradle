@@ -51,16 +51,16 @@ dependencies {
     testImplementation(testFixtures(project(":logging")))
     testImplementation(testFixtures(project(":baseServices")))
 
-    testRuntimeOnly(project(":runtimeApiInfo"))
-
     testFixturesImplementation(project(":baseServices"))
     testFixturesImplementation(project(":modelCore"))
-    testFixturesImplementation(project(":internalTesting"))
     testFixturesImplementation(project(":internalIntegTesting"))
     testFixturesImplementation(library("guava"))
     testFixturesImplementation(testLibrary("jsoup"))
 
-    integTestRuntimeOnly(project(":testingJunitPlatform"))
+    testRuntimeOnly(project(":distributionsCore")) {
+        because("ProjectBuilder tests load services from a Gradle distribution.")
+    }
+    integTestDistributionRuntimeOnly(project(":distributionsCore"))
 }
 
 strictCompile {

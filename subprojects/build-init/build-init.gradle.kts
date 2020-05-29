@@ -55,9 +55,10 @@ dependencies {
     integTestImplementation(project(":native"))
     integTestImplementation(testLibrary("jetty"))
 
-    testFixturesImplementation(project(":internalTesting"))
-
-    integTestRuntimeOnly(project(":distributionsFull"))
+    testRuntimeOnly(project(":distributionsCore")) {
+        because("ProjectBuilder tests load services from a Gradle distribution.")
+    }
+    integTestDistributionRuntimeOnly(project(":distributionsCore"))
 }
 
 tasks {

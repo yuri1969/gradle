@@ -37,12 +37,9 @@ dependencies {
     integTestImplementation(project(":buildOption"))
     integTestImplementation(project(":launcher"))
 
-    integTestRuntimeOnly(project(":toolingApiBuilders"))
-    integTestRuntimeOnly(project(":ide"))
-    integTestRuntimeOnly(project(":pluginDevelopment"))
-    integTestRuntimeOnly(project(":testKit"))
-
-    integTestRuntimeOnly(project(":runtimeApiInfo"))
+    integTestDistributionRuntimeOnly(project(":distributionsBasics")) {
+        because("Requires test-kit: 'java-gradle-plugin' is used in some integration tests which always adds the test-kit dependency.")
+    }
 }
 
 testFilesCleanup {

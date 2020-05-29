@@ -54,7 +54,6 @@ dependencies {
     testFixturesApi(project(":logging")) {
         because("test fixtures export the ConsoleOutput class")
     }
-    testFixturesImplementation(project(":internalTesting"))
     testFixturesImplementation(project(":internalIntegTesting"))
 
     testImplementation(project(":dependencyManagement"))
@@ -63,10 +62,10 @@ dependencies {
     testImplementation(testFixtures(project(":core")))
     testImplementation(testFixtures(project(":dependencyManagement")))
 
-    testRuntimeOnly(project(":runtimeApiInfo"))
-
     integTestImplementation(testLibrary("jetty"))
-    integTestRuntimeOnly(project(":testKit"))
+
+    integTestDistributionRuntimeOnly(project(":distributionsJvm"))
+    crossVersionTestDistributionRuntimeOnly(project(":distributionsJvm"))
 }
 
 strictCompile {

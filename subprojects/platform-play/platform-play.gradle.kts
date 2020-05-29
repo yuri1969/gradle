@@ -58,8 +58,6 @@ dependencies {
     testImplementation(project(":resources"))
     testImplementation(project(":baseServicesGroovy"))
 
-    testRuntimeOnly(project(":runtimeApiInfo"))
-
     integTestImplementation(library("ant"))
     integTestRuntimeOnly(project(":compositeBuilds"))
     integTestRuntimeOnly(project(":idePlay"))
@@ -72,7 +70,6 @@ dependencies {
     testFixturesApi(testFixtures(project(":platformNative")))
     testFixturesApi(testFixtures(project(":languageJvm")))
     testFixturesApi(project(":internalIntegTesting"))
-    testFixturesImplementation(project(":internalTesting"))
     testFixturesImplementation(project(":processServices"))
     testFixturesImplementation(library("commons_io"))
     testFixturesImplementation(library("commons_httpclient"))
@@ -83,6 +80,8 @@ dependencies {
     testImplementation(testFixtures(project(":dependencyManagement")))
     testImplementation(testFixtures(project(":diagnostics")))
     testImplementation(testFixtures(project(":platformBase")))
+
+    integTestDistributionRuntimeOnly(project(":distributionsFull"))
 
     integTestRuntimeResources(testFixtures(project(":platformPlay")))
 }

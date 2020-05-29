@@ -46,23 +46,17 @@ dependencies {
     testImplementation(testFixtures(project(":core")))
     testImplementation(testFixtures(project(":platformBase")))
 
-    testRuntimeOnly(project(":runtimeApiInfo"))
-
     testFixturesApi(testFixtures(project(":languageJvm")))
     testFixturesImplementation(project(":baseServices"))
     testFixturesImplementation(project(":core"))
     testFixturesImplementation(project(":coreApi"))
     testFixturesImplementation(project(":modelCore"))
-    testFixturesImplementation(project(":internalTesting"))
     testFixturesImplementation(project(":internalIntegTesting"))
     testFixturesImplementation(project(":platformBase"))
     testFixturesImplementation(project(":persistentCache"))
     testFixturesImplementation(library("slf4j_api"))
 
-    integTestRuntimeOnly(project(":testingJunitPlatform"))
-
-    // TODO - get rid of this cycle
-    integTestRuntimeOnly(project(":plugins"))
+    integTestDistributionRuntimeOnly(project(":distributionsCore"))
 }
 
 strictCompile {

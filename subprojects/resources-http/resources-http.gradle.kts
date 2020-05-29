@@ -41,8 +41,8 @@ dependencies {
 
     testFixturesImplementation(project(":baseServices"))
     testFixturesImplementation(project(":logging"))
-    testFixturesImplementation(project(":internalTesting"))
     testFixturesImplementation(project(":internalIntegTesting"))
     testFixturesImplementation(library("slf4j_api"))
-    integTestRuntimeOnly(project(":runtimeApiInfo"))
+
+    integTestDistributionRuntimeOnly(project(":distributionsCore"))
 }

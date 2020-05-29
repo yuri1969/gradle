@@ -32,7 +32,7 @@ public class IntegrationTestBuildContext {
     public static final IntegrationTestBuildContext INSTANCE = new IntegrationTestBuildContext();
 
     public TestFile getGradleHomeDir() {
-        return file("integTest.gradleHomeDir", null);
+        return nullableFile("integTest.gradleHomeDir", null);
     }
 
     public TestFile getSamplesDir() {
@@ -52,12 +52,7 @@ public class IntegrationTestBuildContext {
     }
 
     public TestFile getGradleUserHomeDir() {
-        return file("integTest.gradleUserHomeDir", "intTestHomeDir").file("worker-1");
-    }
-
-    @Nullable
-    public TestFile getGradleGeneratedApiJarCacheDir() {
-        return optionalFile("integTest.gradleGeneratedApiJarCacheDir");
+        return file("integTest.gradleUserHomeDir", "intTestHomeDir/distributions-unknown");
     }
 
     public TestFile getTmpDir() {
@@ -119,6 +114,18 @@ public class IntegrationTestBuildContext {
         }
         if (defaultPath == null) {
             throw new RuntimeException("You must set the '" + propertyName + "' property to run the integration tests.");
+        }
+        return testFile(defaultPath);
+    }
+
+    @Nullable
+    protected static TestFile nullableFile(String propertyName, String defaultPath) {
+        TestFile testFile = optionalFile(propertyName);
+        if (testFile != null) {
+            return testFile;
+        }
+        if (defaultPath == null) {
+            return null;
         }
         return testFile(defaultPath);
     }

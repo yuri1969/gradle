@@ -38,7 +38,7 @@ shadedJar {
 }
 
 dependencies {
-    "shadedImplementation"(library("slf4j_api")) { version { require(libraryVersion("slf4j_api")) } }
+    shadedImplementation(library("slf4j_api")) { version { require(libraryVersion("slf4j_api")) } }
 
     implementation(project(":baseServices"))
     implementation(project(":messaging"))
@@ -54,30 +54,16 @@ dependencies {
     testFixturesImplementation(project(":modelCore"))
     testFixturesImplementation(project(":baseServices"))
     testFixturesImplementation(project(":baseServicesGroovy"))
-    testFixturesImplementation(project(":internalTesting"))
     testFixturesImplementation(project(":internalIntegTesting"))
     testFixturesImplementation(library("commons_io"))
     testFixturesImplementation(library("slf4j_api"))
 
     integTestImplementation(project(":jvmServices"))
     integTestImplementation(project(":persistentCache"))
-    integTestRuntimeOnly(project(":toolingApiBuilders"))
-    integTestRuntimeOnly(project(":ivy"))
 
     crossVersionTestImplementation(project(":jvmServices"))
     crossVersionTestImplementation(testLibrary("jetty"))
     crossVersionTestImplementation(library("commons_io"))
-
-    crossVersionTestRuntimeOnly(project(":toolingApiBuilders"))
-    crossVersionTestRuntimeOnly(project(":kotlinDsl"))
-    crossVersionTestRuntimeOnly(project(":kotlinDslProviderPlugins"))
-    crossVersionTestRuntimeOnly(project(":kotlinDslToolingBuilders"))
-    crossVersionTestRuntimeOnly(project(":buildInit"))
-    crossVersionTestRuntimeOnly(project(":ivy"))
-    crossVersionTestRuntimeOnly(project(":maven"))
-    crossVersionTestRuntimeOnly(project(":apiMetadata"))
-    crossVersionTestRuntimeOnly(project(":runtimeApiInfo"))
-    crossVersionTestRuntimeOnly(project(":testingJunitPlatform"))
     crossVersionTestRuntimeOnly(testLibrary("cglib")) {
         because("BuildFinishedCrossVersionSpec classpath inference requires cglib enhancer")
     }
@@ -88,11 +74,8 @@ dependencies {
     testImplementation(testFixtures(project(":ide")))
     testImplementation(testFixtures(project(":workers")))
 
-    integTestRuntimeOnly(project(":runtimeApiInfo"))
-    integTestRuntimeOnly(project(":kotlinDsl"))
-    integTestRuntimeOnly(project(":kotlinDslProviderPlugins"))
-    integTestRuntimeOnly(project(":kotlinDslToolingBuilders"))
-    integTestRuntimeOnly(project(":apiMetadata"))
+    integTestDistributionRuntimeOnly(project(":distributionsBasics"))
+    crossVersionTestDistributionRuntimeOnly(project(":distributionsFull"))
 }
 
 strictCompile {

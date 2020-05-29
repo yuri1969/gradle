@@ -41,7 +41,6 @@ dependencies {
     testImplementation(testFixtures(project(":core")))
 
     testFixturesImplementation(project(":baseServices"))
-    testFixturesImplementation(project(":internalTesting"))
     testFixturesImplementation(project(":internalIntegTesting"))
 
     testFixturesImplementation(library("jgit"))
@@ -51,7 +50,5 @@ dependencies {
     testFixturesImplementation(library("guava"))
 
     integTestImplementation(project(":launcher"))
-    integTestRuntimeOnly(project(":pluginDevelopment"))
-    integTestRuntimeOnly(project(":testKit"))
-    integTestRuntimeOnly(project(":runtimeApiInfo"))
+    integTestDistributionRuntimeOnly(project(":distributionsBasics"))
 }

@@ -18,6 +18,7 @@ package org.gradle.testkit.runner.internal;
 
 import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 
 import java.io.File;
 import java.net.URI;
@@ -41,6 +42,10 @@ public abstract class GradleProvider {
 
     public static GradleProvider version(String version) {
         return new VersionGradleProvider(version);
+    }
+
+    public static GradleProvider embedded() {
+        return new EmbeddedGradleProvider();
     }
 
     private static final class InstallationGradleProvider extends GradleProvider {
@@ -94,6 +99,19 @@ public abstract class GradleProvider {
         @Override
         public void applyTo(GradleRunner gradleRunner) {
             gradleRunner.withGradleVersion(gradleVersion);
+        }
+    }
+
+    private static final class EmbeddedGradleProvider extends GradleProvider {
+        private EmbeddedGradleProvider() {}
+
+        @Override
+        public void applyTo(GradleConnector gradleConnector) {
+            ((DefaultGradleConnector) gradleConnector).useClasspathDistribution();
+        }
+
+        @Override
+        public void applyTo(GradleRunner gradleRunner) {
         }
     }
 }

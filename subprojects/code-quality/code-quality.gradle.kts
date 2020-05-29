@@ -36,11 +36,15 @@ dependencies {
 
     testImplementation(project(":fileCollections"))
     testImplementation(testFixtures(project(":core")))
-    testRuntimeOnly(project(":runtimeApiInfo"))
 
     testFixturesImplementation(project(":core"))
     testFixturesImplementation(project(":coreApi"))
     testFixturesImplementation(project(":baseServices"))
+
+    testRuntimeOnly(project(":distributionsCore")) {
+        because("ProjectBuilder tests load services from a Gradle distribution.")
+    }
+    integTestDistributionRuntimeOnly(project(":distributionsCore"))
 }
 
 classycle {

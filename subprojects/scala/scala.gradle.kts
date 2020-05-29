@@ -52,13 +52,13 @@ dependencies {
     testImplementation(testFixtures(project(":languageJvm")))
     testImplementation(testFixtures(project(":languageJava")))
 
-    testRuntimeOnly(project(":runtimeApiInfo"))
-
     integTestImplementation(project(":jvmServices"))
     integTestImplementation(testFixtures(project(":languageScala")))
-    integTestRuntimeOnly(project(":ide"))
-    integTestRuntimeOnly(project(":maven"))
-    integTestRuntimeOnly(project(":testingJunitPlatform"))
+
+    testRuntimeOnly(project(":distributionsCore")) {
+        because("ProjectBuilder tests load services from a Gradle distribution.")
+    }
+    integTestDistributionRuntimeOnly(project(":distributionsJvm"))
 }
 
 classycle {

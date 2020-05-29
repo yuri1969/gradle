@@ -40,15 +40,13 @@ dependencies {
     integTestImplementation(project(":kotlinDslTestFixtures"))
     integTestImplementation(project(":internalTesting"))
 
-    integTestRuntimeOnly(project(":toolingApiBuilders"))
-    integTestRuntimeOnly(project(":runtimeApiInfo"))
-
     crossVersionTestImplementation(project(":persistentCache"))
     crossVersionTestImplementation(library("slf4j_api"))
     crossVersionTestImplementation(library("guava"))
     crossVersionTestImplementation(library("ant"))
-    crossVersionTestRuntimeOnly(project(":pluginDevelopment"))
-    crossVersionTestRuntimeOnly(project(":runtimeApiInfo"))
+
+    integTestDistributionRuntimeOnly(project(":distributionsBasics"))
+    crossVersionTestDistributionRuntimeOnly(project(":distributionsBasics"))
 }
 
 testFilesCleanup {
