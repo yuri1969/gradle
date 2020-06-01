@@ -8,9 +8,12 @@ import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.junit.JUnitOptions
+import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
+import org.gradle.gradlebuild.versioning.buildVersion
 import org.gradle.kotlin.dsl.*
 import org.gradle.plugins.ide.idea.IdeaPlugin
-import org.gradle.gradlebuild.versioning.buildVersion
 
 
 enum class TestType(val prefix: String, val executers: List<String>, val libRepoRequired: Boolean) {
@@ -176,5 +179,32 @@ fun Project.configureIde(testType: TestType) {
                 testResourceDirs = testResourceDirs + sourceSet.resources.srcDirs
             }
         }
+    }
+}
+
+
+fun Test.getIncludeCategories(): MutableSet<String> {
+    if (options is JUnitOptions) {
+        return (options as JUnitOptions).includeCategories
+    } else {
+        return (options as JUnitPlatformOptions).includeTags
+    }
+}
+
+
+fun Test.includeCategories(vararg categories: String) {
+    if (options is JUnitOptions) {
+        (options as JUnitOptions).includeCategories(*categories)
+    } else {
+        (options as JUnitPlatformOptions).includeTags(*categories)
+    }
+}
+
+
+fun Test.excludeCategories(vararg categories: String) {
+    if (options is JUnitOptions) {
+        (options as JUnitOptions).excludeCategories(*categories)
+    } else {
+        (options as JUnitPlatformOptions).excludeTags(*categories)
     }
 }
