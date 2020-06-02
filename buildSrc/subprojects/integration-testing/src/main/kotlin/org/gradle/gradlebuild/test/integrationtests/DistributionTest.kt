@@ -98,22 +98,23 @@ class LibsRepositoryEnvironmentProvider(objects: ObjectFactory) : CommandLineArg
     var required = false
 
     @get:Classpath
-    @get:Optional
     val jars: Set<File>
-        get() = if (required) emptySet()
-        else dir.get().asFileTree.matching {
-            include("**/*.jar")
-        }.files.toSortedSet()
+        get() = if (required)
+            dir.get().asFileTree.matching {
+                include("**/*.jar")
+            }.files.toSortedSet()
+        else emptySet()
 
     @get:Classpath
     @get:InputFiles
     val metadatas: Set<File>
-        get() = if (required) emptySet()
-        else dir.get().asFileTree.matching {
-            include("**/*.pom")
-            include("**/*.xml")
-            include("**/*.metadata")
-        }.files.toSortedSet()
+        get() = if (required)
+            dir.get().asFileTree.matching {
+                include("**/*.pom")
+                include("**/*.xml")
+                include("**/*.metadata")
+            }.files.toSortedSet()
+        else emptySet()
 
     override fun asArguments() =
         if (required) mapOf("integTest.libsRepo" to absolutePathOf(dir)).asSystemPropertyJvmArguments()

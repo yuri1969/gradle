@@ -18,6 +18,8 @@ package org.gradle.gradlebuild.unittestandcompile
 import accessors.base
 import accessors.java
 import buildJvms
+import com.gradle.enterprise.gradleplugin.testdistribution.TestDistributionPlugin
+import gitInfo
 import libraries
 import library
 import maxParallelForks
@@ -53,12 +55,11 @@ import org.gradle.kotlin.dsl.*
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.process.CommandLineArgumentProvider
+import org.gradle.testing.PerformanceTest
 import org.gradle.testretry.TestRetryPlugin
 import testLibrary
 import java.util.concurrent.Callable
 import java.util.jar.Attributes
-import org.gradle.testing.PerformanceTest
-import gitInfo
 
 
 /**
@@ -74,6 +75,7 @@ class UnitTestAndCompilePlugin : Plugin<Project> {
         apply(plugin = "groovy")
         plugins.apply(AvailableJavaInstallationsPlugin::class.java)
         plugins.apply(TestRetryPlugin::class.java)
+        plugins.apply(TestDistributionPlugin::class.java)
 
         val extension = extensions.create<UnitTestAndCompileExtension>("gradlebuildJava", this)
 
@@ -190,8 +192,10 @@ class UnitTestAndCompilePlugin : Plugin<Project> {
             val implementation = configurations.getByName("implementation")
             val compileOnly = configurations.getByName("compileOnly")
             val testImplementation = configurations.getByName("testImplementation")
+            val testCompileOnly = configurations.getByName("testCompileOnly")
             val testRuntimeOnly = configurations.getByName("testRuntimeOnly")
-            testImplementation(library("junit"))
+            testCompileOnly(library("junit"))
+            testRuntimeOnly(library("junit5_vintage"))
             testImplementation(library("groovy"))
             testImplementation(testLibrary("spock"))
             testRuntimeOnly(testLibrary("bytebuddy"))
@@ -270,14 +274,24 @@ class UnitTestAndCompilePlugin : Plugin<Project> {
         tasks.withType<Test>().configureEach {
             maxParallelForks = project.maxParallelForks
 
+            useJUnitPlatform()
             configureJvmForTest()
             configureGitInfo()
             addOsAsInputs()
 
-            if (BuildEnvironment.isCiServer && this !is PerformanceTest) {
+            if (this !is PerformanceTest) {
                 retry {
                     maxRetries.set(1)
                     maxFailures.set(10)
+                }
+                distribution {
+                    maxLocalExecutors.set(System.getProperty("max.local.executors")?.toInt() ?: 0)
+                    enabled.set(System.getProperty("enable.distribution.plugin")?.toBoolean() ?: true)
+                    when {
+                        OperatingSystem.current().isLinux() -> requirements.set(listOf("os=linux"))
+                        OperatingSystem.current().isWindows() -> requirements.set(listOf("os=windows"))
+                        OperatingSystem.current().isMacOsX() -> requirements.set(listOf("os=macos"))
+                    }
                 }
                 doFirst {
                     logger.lifecycle("maxParallelForks for '$path' is $maxParallelForks")
