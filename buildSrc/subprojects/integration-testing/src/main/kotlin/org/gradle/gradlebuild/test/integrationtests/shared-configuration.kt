@@ -4,11 +4,14 @@ import accessors.groovy
 import accessors.java
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.*
 import org.gradle.plugins.ide.idea.IdeaPlugin
+import org.gradle.gradlebuild.versioning.buildVersion
+import java.util.concurrent.Callable
 
 
 enum class TestType(val prefix: String, val executers: List<String>, val libRepoRequired: Boolean) {
@@ -95,10 +98,50 @@ fun Project.createTestTask(name: String, executer: String, sourceSet: SourceSet,
  * Distributed test requires all dependencies to be declared
  */
 fun Project.integrationTestUsesSampleDir(vararg sampleDirs: String) {
-    tasks.withType<IntegrationTest>() {
+    tasks.withType<IntegrationTest>().configureEach {
         systemProperty("declaredSampleInputs", sampleDirs.joinToString(";"))
         inputs.files(rootProject.files(sampleDirs))
             .withPropertyName("autoTestedSamples")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    }
+}
+
+
+/**
+ * kotlin-dsl-plugins integration test depends on jars published to local repository
+ */
+fun Project.integrationTestUsesKotlinDslPlugins() {
+    tasks.withType<IntegrationTest>().configureEach {
+        inputs.files(Callable {
+            project(":kotlinDslPlugins")
+                .fileTree("build/repository")
+                .matching { include("**/*.jar") }
+                .files
+                .toSortedSet()
+        }).withPropertyName("localKotlinDslPluginJars")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+            .withNormalizer(ClasspathNormalizer::class)
+
+        inputs.files(Callable {
+            project(":kotlinDslPlugins")
+                .fileTree("build/repository")
+                .matching {
+                    include("**/*.pom")
+                    include("**/*.xml")
+                }
+                .files
+                .toSortedSet()
+        }).withPropertyName("localKotlinDslPluginPoms")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    }
+}
+
+
+// ""/bin/all/docs/src
+fun Project.integrationTestUsesDistribution(type: String = "bin") {
+    tasks.withType<IntegrationTest>().configureEach {
+        inputs.file(rootProject.buildDir.resolve("distributions/gradle-${rootProject.buildVersion.baseVersion}${if (type == "") ".jar" else "-$type.zip"}"))
+            .withPropertyName("distribution")
             .withPathSensitivity(PathSensitivity.RELATIVE)
     }
 }
