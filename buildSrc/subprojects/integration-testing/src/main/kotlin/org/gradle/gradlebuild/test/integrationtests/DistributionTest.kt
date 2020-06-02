@@ -112,7 +112,7 @@ class LibsRepositoryEnvironmentProvider(objects: ObjectFactory) : CommandLineArg
             dir.get().asFileTree.matching {
                 include("**/*.pom")
                 include("**/*.xml")
-                include("**/*.metadata")
+                include("**/*.module")
             }.files.toSortedSet()
         else emptySet()
 
